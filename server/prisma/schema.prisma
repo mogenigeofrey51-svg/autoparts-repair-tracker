@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  phone        String?
+  address      String?
+  role         Role       @default(USER)
+  vehicles     Vehicle[]
+  cartItems    CartItem[]
+  orders       Order[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Vehicle {
+  id                 String         @id @default(cuid())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  make               String
+  model              String
+  year               Int
+  registrationNumber String
+  vin                String
+  engineNumber       String
+  mileage            Int
+  fuelType           String
+  transmissionType   String
+  notes              String?
+  repairs            RepairRecord[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([make, model, year])
+}
+
+model RepairRecord {
+  id              String   @id @default(cuid())
+  vehicleId       String
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  dateOfRepair    DateTime
+  mileageAtRepair Int
+  partsUsed       String[]
+  mechanicName    String
+  cost            Decimal  @db.Decimal(10, 2)
+  receiptUrl      String?
+  nextServiceDate DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([vehicleId, dateOfRepair])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                String      @id @default(cuid())
+  categoryId        String
+  category          Category    @relation(fields: [categoryId], references: [id])
+  name              String
+  brand             String
+  compatibleMakes   String[]
+  compatibleModels  String[]
+  compatibleYears   Int[]
+  price             Decimal     @db.Decimal(10, 2)
+  stockQuantity     Int
+  description       String
+  imageUrl          String?
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([brand])
+  @@unique([name, brand])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          OrderStatus @default(PENDING)
+  total           Decimal     @db.Decimal(10, 2)
+  shippingName    String
+  shippingPhone   String?
+  shippingAddress String
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  brand       String
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}

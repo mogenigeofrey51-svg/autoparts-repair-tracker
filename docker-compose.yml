@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: autoparts-repair-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autoparts
+      POSTGRES_PASSWORD: autoparts
+      POSTGRES_DB: autoparts_repair_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

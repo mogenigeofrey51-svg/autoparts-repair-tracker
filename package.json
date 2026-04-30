@@ -1,0 +1,24 @@
+{
+  "name": "autoparts-repair-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Full-stack MVP for AutoParts & Repair Tracker.",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "db:generate": "npm run prisma:generate -w server",
+    "db:migrate": "npm run prisma:migrate -w server",
+    "db:deploy": "npm run prisma:deploy -w server",
+    "db:seed": "npm run seed -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
