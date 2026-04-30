@@ -34,6 +34,8 @@ model User {
   passwordHash String
   phone        String?
   address      String?
+  addressLatitude  Float?
+  addressLongitude Float?
   role         Role       @default(USER)
   vehicles     Vehicle[]
   cartItems    CartItem[]
@@ -57,6 +59,8 @@ model Vehicle {
   transmissionType   String
   notes              String?
   repairs            RepairRecord[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
@@ -121,14 +125,17 @@ model CartItem {
   id        String   @id @default(cuid())
   userId    String
   productId String
+  vehicleId String?
   quantity  Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
   @@index([userId])
+  @@index([vehicleId])
 }
 
 model Order {
@@ -141,6 +148,8 @@ model Order {
   shippingName    String
   shippingPhone   String?
   shippingAddress String
+  shippingLatitude  Float?
+  shippingLongitude Float?
   paidAt          DateTime?
   releasedAt      DateTime?
   items           OrderItem[]
@@ -156,14 +165,21 @@ model OrderItem {
   id          String   @id @default(cuid())
   orderId     String
   productId   String?
+  vehicleId   String?
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   productName String
   brand       String
   unitPrice   Decimal  @db.Decimal(10, 2)
   quantity    Int
+  vehicleMake String?
+  vehicleModel String?
+  vehicleYear Int?
+  vehicleRegistrationNumber String?
   createdAt   DateTime @default(now())
 
   @@index([orderId])
   @@index([productId])
+  @@index([vehicleId])
 }

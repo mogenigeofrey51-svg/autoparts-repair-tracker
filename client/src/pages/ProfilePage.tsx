@@ -1,6 +1,7 @@
 import { MapPin, Save } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../api/client";
+import { AddressAutocomplete } from "../components/AddressAutocomplete";
 import { PageHeader } from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import type { User } from "../types";
@@ -11,16 +12,20 @@ export function ProfilePage() {
   const [form, setForm] = useState({
     name: user?.name ?? "",
     phone: user?.phone ?? "",
-    address: user?.address ?? ""
+    address: user?.address ?? "",
+    addressLatitude: user?.addressLatitude ?? null,
+    addressLongitude: user?.addressLongitude ?? null
   });
   const [notice, setNotice] = useState("");
-  const mapUrl = googleMapsSearchUrl(form.address);
+  const mapUrl = googleMapsSearchUrl(form.address, form.addressLatitude, form.addressLongitude);
 
   useEffect(() => {
     setForm({
       name: user?.name ?? "",
       phone: user?.phone ?? "",
-      address: user?.address ?? ""
+      address: user?.address ?? "",
+      addressLatitude: user?.addressLatitude ?? null,
+      addressLongitude: user?.addressLongitude ?? null
     });
   }, [user]);
 
@@ -58,14 +63,27 @@ export function ProfilePage() {
               onChange={(event) => setForm({ ...form, phone: event.target.value })}
             />
           </label>
-          <label className="block text-sm font-medium">
-            Address
-            <textarea
-              className="focus-ring mt-1 min-h-28 w-full rounded-md border border-zinc-300 px-3 py-2"
-              value={form.address ?? ""}
-              onChange={(event) => setForm({ ...form, address: event.target.value })}
-            />
-          </label>
+          <AddressAutocomplete
+            label="Delivery address"
+            value={{
+              address: form.address ?? "",
+              latitude: form.addressLatitude,
+              longitude: form.addressLongitude
+            }}
+            onChange={(location) =>
+              setForm({
+                ...form,
+                address: location.address,
+                addressLatitude: location.latitude ?? null,
+                addressLongitude: location.longitude ?? null
+              })
+            }
+          />
+          {form.addressLatitude && form.addressLongitude && (
+            <p className="rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+              Map pin saved: {form.addressLatitude.toFixed(5)}, {form.addressLongitude.toFixed(5)}
+            </p>
+          )}
           {mapUrl && (
             <a className="secondary-action w-fit px-3 py-1.5" href={mapUrl} target="_blank" rel="noreferrer">
               <MapPin size={15} />

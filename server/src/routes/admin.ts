@@ -4,7 +4,7 @@ import { z } from "zod";
 import { authenticate, requireAdmin } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { publicUser, serializeOrder, serializeProduct, serializeRepair, serializeVehicle } from "../utils/serializers.js";
+import { publicUser, serializeOrder, serializeProduct } from "../utils/serializers.js";
 
 export const adminRoutes = Router();
 
@@ -197,39 +197,5 @@ adminRoutes.post(
       include: { items: true, user: true }
     });
     res.json(serializeOrder(order));
-  })
-);
-
-adminRoutes.get(
-  "/vehicles",
-  asyncHandler(async (_req, res) => {
-    const vehicles = await prisma.vehicle.findMany({
-      include: { repairs: { orderBy: { dateOfRepair: "desc" } }, user: true },
-      orderBy: { updatedAt: "desc" }
-    });
-    res.json(vehicles.map((vehicle) => ({ ...serializeVehicle(vehicle), user: publicUser(vehicle.user) })));
-  })
-);
-
-adminRoutes.get(
-  "/repairs",
-  asyncHandler(async (_req, res) => {
-    const repairs = await prisma.repairRecord.findMany({
-      include: {
-        vehicle: {
-          include: { user: true }
-        }
-      },
-      orderBy: { dateOfRepair: "desc" }
-    });
-    res.json(
-      repairs.map((repair) => ({
-        ...serializeRepair(repair),
-        vehicle: {
-          ...repair.vehicle,
-          user: publicUser(repair.vehicle.user)
-        }
-      }))
-    );
   })
 );

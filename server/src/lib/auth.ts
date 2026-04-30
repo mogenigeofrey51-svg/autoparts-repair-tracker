@@ -44,6 +44,15 @@ export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   next();
 }
 
+export function requireCustomer(req: Request, _res: Response, next: NextFunction) {
+  const auth = getAuth(req);
+  if (auth.role === "ADMIN") {
+    next(new ApiError(403, "Customer access required"));
+    return;
+  }
+  next();
+}
+
 export function getAuth(req: Request): AuthContext {
   const auth = (req as AuthenticatedRequest).auth;
   if (!auth) {

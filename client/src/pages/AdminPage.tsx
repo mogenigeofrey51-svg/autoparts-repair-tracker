@@ -3,12 +3,11 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { StatCard } from "../components/StatCard";
-import type { Category, Order, OrderStatus, PaymentStatus, Product, RepairRecord, User, Vehicle } from "../types";
+import type { Category, Order, OrderItem, OrderStatus, PaymentStatus, Product, User } from "../types";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-const tabs = ["Overview", "Orders", "Products", "Categories", "Users", "Vehicles", "Repairs"] as const;
+const tabs = ["Overview", "Orders", "Products", "Categories", "Users"] as const;
 type Tab = (typeof tabs)[number];
-type AdminRepair = RepairRecord & { vehicle: Vehicle };
 
 const emptyProductForm = {
   categoryId: "",
@@ -36,14 +35,26 @@ function listFromText(value: string) {
     .filter(Boolean);
 }
 
+function vehicleLabel(item: OrderItem) {
+  if (item.vehicleYear && item.vehicleMake && item.vehicleModel) {
+    return `${item.vehicleYear} ${item.vehicleMake} ${item.vehicleModel}${
+      item.vehicleRegistrationNumber ? ` (${item.vehicleRegistrationNumber})` : ""
+    }`;
+  }
+
+  if (item.vehicle) {
+    return `${item.vehicle.year} ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registrationNumber})`;
+  }
+
+  return "No vehicle allocation";
+}
+
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [repairs, setRepairs] = useState<AdminRepair[]>([]);
   const [productForm, setProductForm] = useState(emptyProductForm);
   const [categoryForm, setCategoryForm] = useState(emptyCategoryForm);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -51,20 +62,16 @@ export function AdminPage() {
   const [notice, setNotice] = useState("");
 
   async function loadAdminData() {
-    const [productData, categoryData, userData, orderData, vehicleData, repairData] = await Promise.all([
+    const [productData, categoryData, userData, orderData] = await Promise.all([
       api<Product[]>("/admin/products"),
       api<Category[]>("/categories"),
       api<User[]>("/admin/users"),
-      api<Order[]>("/admin/orders"),
-      api<Vehicle[]>("/admin/vehicles"),
-      api<AdminRepair[]>("/admin/repairs")
+      api<Order[]>("/admin/orders")
     ]);
     setProducts(productData);
     setCategories(categoryData);
     setUsers(userData);
     setOrders(orderData);
-    setVehicles(vehicleData);
-    setRepairs(repairData);
     if (!productForm.categoryId && categoryData[0]) {
       setProductForm((current) => ({ ...current, categoryId: categoryData[0].id }));
     }
@@ -199,7 +206,7 @@ export function AdminPage() {
     <div>
       <PageHeader
         title="Admin dashboard"
-        description="Business operations for paid orders, release workflow, fulfillment, inventory, customers, vehicles, and repair records."
+        description="Business operations for paid orders, release workflow, fulfillment, inventory, customers, and sales."
       />
 
       <div className="mb-6 flex gap-2 overflow-x-auto">
@@ -268,6 +275,13 @@ export function AdminPage() {
                         <p className="mt-1 text-sm text-zinc-500">
                           {order.user?.email} - {order.items.length} item{order.items.length === 1 ? "" : "s"}
                         </p>
+                        <div className="mt-2 space-y-1 text-xs text-zinc-500">
+                          {order.items.slice(0, 2).map((item) => (
+                            <p key={item.id}>
+                              {item.quantity}x {item.productName} - {vehicleLabel(item)}
+                            </p>
+                          ))}
+                        </div>
                         <p className="mt-1 text-sm text-zinc-600">{order.shippingAddress}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -507,7 +521,20 @@ export function AdminPage() {
                     <td className="py-3 font-medium">#{order.id.slice(-8).toUpperCase()}</td>
                     <td>{order.user?.email}</td>
                     <td>{currency.format(order.total)}</td>
-                    <td>{order.items.length}</td>
+                    <td>
+                      <div className="min-w-[18rem] space-y-2">
+                        {order.items.map((item) => (
+                          <div key={item.id}>
+                            <p className="font-medium">
+                              {item.quantity}x {item.productName}
+                            </p>
+                            <p className={vehicleLabel(item) === "No vehicle allocation" ? "text-xs text-zinc-400" : "text-xs font-semibold text-emerald-700"}>
+                              {vehicleLabel(item)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
                     <td>
                       <select
                         className="focus-ring rounded-md border border-zinc-300 px-3 py-2"
@@ -561,34 +588,6 @@ export function AdminPage() {
             </table>
           </div>
         </section>
-      )}
-
-      {activeTab === "Vehicles" && (
-        <AdminTable
-          headers={["Owner", "Vehicle", "Plate", "VIN", "Mileage", "Repairs"]}
-          rows={vehicles.map((vehicle) => [
-            vehicle.user?.email ?? "",
-            `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-            vehicle.registrationNumber,
-            vehicle.vin,
-            vehicle.mileage.toLocaleString(),
-            String(vehicle.repairs?.length ?? 0)
-          ])}
-        />
-      )}
-
-      {activeTab === "Repairs" && (
-        <AdminTable
-          headers={["Vehicle", "Owner", "Repair", "Garage", "Cost", "Date"]}
-          rows={repairs.map((repair) => [
-            `${repair.vehicle.year} ${repair.vehicle.make} ${repair.vehicle.model}`,
-            repair.vehicle.user?.email ?? "",
-            repair.title,
-            repair.mechanicName,
-            currency.format(repair.cost),
-            new Date(repair.dateOfRepair).toLocaleDateString()
-          ])}
-        />
       )}
     </div>
   );

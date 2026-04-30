@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { Router } from "express";
 import { z } from "zod";
-import { authenticate, getAuth, type AuthContext } from "../lib/auth.js";
+import { authenticate, getAuth, requireCustomer, type AuthContext } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { ApiError } from "../middleware/error.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -39,7 +39,7 @@ const vehicleInclude = {
 } satisfies Prisma.VehicleInclude;
 
 function vehicleWhere(id: string, auth: AuthContext): Prisma.VehicleWhereInput {
-  return auth.role === "ADMIN" ? { id } : { id, userId: auth.userId };
+  return { id, userId: auth.userId };
 }
 
 async function ensureVehicle(id: string, auth: AuthContext) {
@@ -53,14 +53,14 @@ async function ensureVehicle(id: string, auth: AuthContext) {
   return vehicle;
 }
 
-vehicleRoutes.use(authenticate);
+vehicleRoutes.use(authenticate, requireCustomer);
 
 vehicleRoutes.get(
   "/",
   asyncHandler(async (req, res) => {
     const auth = getAuth(req);
     const vehicles = await prisma.vehicle.findMany({
-      where: auth.role === "ADMIN" ? undefined : { userId: auth.userId },
+      where: { userId: auth.userId },
       include: vehicleInclude,
       orderBy: { updatedAt: "desc" }
     });
@@ -149,7 +149,7 @@ vehicleRoutes.patch(
       where: { id: req.params.id },
       include: { vehicle: true }
     });
-    if (!repair || (auth.role !== "ADMIN" && repair.vehicle.userId !== auth.userId)) {
+    if (!repair || repair.vehicle.userId !== auth.userId) {
       throw new ApiError(404, "Repair record not found");
     }
 
@@ -170,7 +170,7 @@ vehicleRoutes.delete(
       where: { id: req.params.id },
       include: { vehicle: true }
     });
-    if (!repair || (auth.role !== "ADMIN" && repair.vehicle.userId !== auth.userId)) {
+    if (!repair || repair.vehicle.userId !== auth.userId) {
       throw new ApiError(404, "Repair record not found");
     }
 

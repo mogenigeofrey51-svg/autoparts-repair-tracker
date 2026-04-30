@@ -14,26 +14,40 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@autoparts.test" },
-    update: {},
+    update: {
+      phone: "+254 700 000 001",
+      address: "Nairobi Service Hub",
+      addressLatitude: -1.286389,
+      addressLongitude: 36.817223
+    },
     create: {
       name: "Admin Manager",
       email: "admin@autoparts.test",
       passwordHash: adminPassword,
       phone: "+254 700 000 001",
       address: "Nairobi Service Hub",
+      addressLatitude: -1.286389,
+      addressLongitude: 36.817223,
       role: Role.ADMIN
     }
   });
 
   const customer = await prisma.user.upsert({
     where: { email: "customer@autoparts.test" },
-    update: {},
+    update: {
+      phone: "+254 700 000 002",
+      address: "Kilimani, Nairobi",
+      addressLatitude: -1.292066,
+      addressLongitude: 36.787221
+    },
     create: {
       name: "Amina Kamau",
       email: "customer@autoparts.test",
       passwordHash: customerPassword,
       phone: "+254 700 000 002",
       address: "Kilimani, Nairobi",
+      addressLatitude: -1.292066,
+      addressLongitude: 36.787221,
       role: Role.USER
     }
   });
@@ -221,13 +235,20 @@ async function main() {
         shippingName: customer.name,
         shippingPhone: customer.phone,
         shippingAddress: customer.address ?? "Kilimani, Nairobi",
+        shippingLatitude: customer.addressLatitude,
+        shippingLongitude: customer.addressLongitude,
         items: {
           create: products.map((product) => ({
             productId: product.id,
+            vehicleId: corolla.id,
             productName: product.name,
             brand: product.brand,
             unitPrice: product.price,
-            quantity: 1
+            quantity: 1,
+            vehicleMake: corolla.make,
+            vehicleModel: corolla.model,
+            vehicleYear: corolla.year,
+            vehicleRegistrationNumber: corolla.registrationNumber
           }))
         }
       }

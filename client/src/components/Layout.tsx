@@ -24,12 +24,18 @@ const baseNav = [
   { to: "/profile", label: "Profile", icon: UserCircle }
 ];
 
+const adminNav = [
+  { to: "/admin", label: "Business", icon: Settings },
+  { to: "/profile", label: "Profile", icon: UserCircle }
+];
+
 export function Layout() {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const navItems = user?.role === "ADMIN" ? [...baseNav, { to: "/admin", label: "Admin", icon: Settings }] : baseNav;
+  const isAdmin = user?.role === "ADMIN";
+  const navItems = isAdmin ? adminNav : baseNav;
 
   function handleLogout() {
     logout();
@@ -111,16 +117,28 @@ export function Layout() {
             <Menu size={22} />
           </button>
           <div className="hidden lg:block">
-            <p className="text-sm text-zinc-500">Garage, catalog, cart, and orders in one place</p>
+            <p className="text-sm text-zinc-500">
+              {isAdmin ? "Orders, revenue, fulfillment, and inventory in one place" : "Garage, catalog, cart, and orders in one place"}
+            </p>
           </div>
-          <NavLink
-            to="/cart"
-            className="focus-ring flex items-center gap-2 rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800"
-          >
-            <ShoppingCart size={17} />
-            Cart
-            <span className="rounded-md bg-amber-400 px-2 py-0.5 text-xs text-zinc-950">{count}</span>
-          </NavLink>
+          {isAdmin ? (
+            <NavLink
+              to="/admin"
+              className="focus-ring flex items-center gap-2 rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800"
+            >
+              <Settings size={17} />
+              Business
+            </NavLink>
+          ) : (
+            <NavLink
+              to="/cart"
+              className="focus-ring flex items-center gap-2 rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800"
+            >
+              <ShoppingCart size={17} />
+              Cart
+              <span className="rounded-md bg-amber-400 px-2 py-0.5 text-xs text-zinc-950">{count}</span>
+            </NavLink>
+          )}
         </header>
         <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
           <Outlet />

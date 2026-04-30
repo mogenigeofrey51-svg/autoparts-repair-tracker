@@ -3,9 +3,23 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
-import type { Order } from "../types";
+import type { Order, OrderItem } from "../types";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+function vehicleLabel(item: OrderItem) {
+  if (item.vehicleYear && item.vehicleMake && item.vehicleModel) {
+    return `${item.vehicleYear} ${item.vehicleMake} ${item.vehicleModel}${
+      item.vehicleRegistrationNumber ? ` (${item.vehicleRegistrationNumber})` : ""
+    }`;
+  }
+
+  if (item.vehicle) {
+    return `${item.vehicle.year} ${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registrationNumber})`;
+  }
+
+  return "";
+}
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -58,6 +72,7 @@ export function OrdersPage() {
                     <tr>
                       <th className="py-2">Part</th>
                       <th>Brand</th>
+                      <th>Linked vehicle</th>
                       <th>Qty</th>
                       <th>Price</th>
                     </tr>
@@ -67,6 +82,13 @@ export function OrdersPage() {
                       <tr key={item.id}>
                         <td className="py-3 font-medium">{item.productName}</td>
                         <td>{item.brand}</td>
+                        <td>
+                          {vehicleLabel(item) ? (
+                            <span className="font-medium text-emerald-700">{vehicleLabel(item)}</span>
+                          ) : (
+                            <span className="text-zinc-400">Not linked</span>
+                          )}
+                        </td>
                         <td>{item.quantity}</td>
                         <td>{currency.format(item.unitPrice)}</td>
                       </tr>

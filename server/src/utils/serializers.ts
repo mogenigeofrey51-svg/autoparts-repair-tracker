@@ -34,24 +34,29 @@ export function serializeProduct(product: Entity) {
 export function serializeCartItem(item: Entity) {
   return {
     ...item,
-    product: item.product ? serializeProduct(item.product) : undefined
+    product: item.product ? serializeProduct(item.product) : undefined,
+    vehicle: item.vehicle ? serializeVehicle(item.vehicle) : undefined
   };
 }
 
 export function serializeOrderItem(item: Entity) {
   return {
     ...item,
-    unitPrice: money(item.unitPrice)
+    unitPrice: money(item.unitPrice),
+    vehicle: item.vehicle ? serializeVehicle(item.vehicle) : undefined
   };
 }
 
 export function serializeOrder(order: Entity) {
+  const mapQuery =
+    typeof order.shippingLatitude === "number" && typeof order.shippingLongitude === "number"
+      ? `${order.shippingLatitude},${order.shippingLongitude}`
+      : order.shippingAddress;
+
   return {
     ...order,
     total: money(order.total),
-    mapUrl: order.shippingAddress
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.shippingAddress)}`
-      : undefined,
+    mapUrl: mapQuery ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : undefined,
     items: order.items?.map(serializeOrderItem),
     user: order.user ? publicUser(order.user) : undefined
   };

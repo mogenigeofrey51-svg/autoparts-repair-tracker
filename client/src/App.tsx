@@ -40,6 +40,14 @@ function AdminRoute({ children }: { children: JSX.Element }) {
   return children;
 }
 
+function CustomerRoute({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+  if (user?.role === "ADMIN") {
+    return <Navigate to="/admin" replace />;
+  }
+  return children;
+}
+
 export function App() {
   const { user, loading } = useAuth();
 
@@ -51,12 +59,47 @@ export function App() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
       <Route element={<ProtectedRoute />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="/catalog" element={<CatalogPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/vehicles" element={<VehiclesPage />} />
-        <Route path="/orders" element={<OrdersPage />} />
+        <Route index element={user?.role === "ADMIN" ? <Navigate to="/admin" replace /> : <DashboardPage />} />
+        <Route
+          path="/catalog"
+          element={
+            <CustomerRoute>
+              <CatalogPage />
+            </CustomerRoute>
+          }
+        />
+        <Route
+          path="/products/:id"
+          element={
+            <CustomerRoute>
+              <ProductDetailPage />
+            </CustomerRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <CustomerRoute>
+              <CartPage />
+            </CustomerRoute>
+          }
+        />
+        <Route
+          path="/vehicles"
+          element={
+            <CustomerRoute>
+              <VehiclesPage />
+            </CustomerRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <CustomerRoute>
+              <OrdersPage />
+            </CustomerRoute>
+          }
+        />
         <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/admin"

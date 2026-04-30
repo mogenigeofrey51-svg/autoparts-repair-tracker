@@ -7,6 +7,8 @@ type CheckoutPayload = {
   shippingName?: string;
   shippingPhone?: string;
   shippingAddress?: string;
+  shippingLatitude?: number | null;
+  shippingLongitude?: number | null;
 };
 
 type CartContextValue = {
@@ -16,7 +18,7 @@ type CartContextValue = {
   subtotal: number;
   refreshCart: () => Promise<void>;
   addItem: (productId: string, quantity?: number) => Promise<void>;
-  updateItem: (itemId: string, quantity: number) => Promise<void>;
+  updateItem: (itemId: string, quantity: number, vehicleId?: string | null) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   checkout: (payload: CheckoutPayload) => Promise<Order>;
 };
@@ -29,7 +31,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   async function refreshCart() {
-    if (!user) {
+    if (!user || user.role === "ADMIN") {
       setItems([]);
       return;
     }
@@ -50,8 +52,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await refreshCart();
   }
 
-  async function updateItem(itemId: string, quantity: number) {
-    await api<CartItem>(`/cart/${itemId}`, { method: "PATCH", body: { quantity } });
+  async function updateItem(itemId: string, quantity: number, vehicleId?: string | null) {
+    await api<CartItem>(`/cart/${itemId}`, {
+      method: "PATCH",
+      body: vehicleId === undefined ? { quantity } : { quantity, vehicleId }
+    });
     await refreshCart();
   }
 

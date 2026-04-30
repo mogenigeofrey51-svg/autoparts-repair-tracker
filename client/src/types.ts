@@ -8,6 +8,8 @@ export type User = {
   email: string;
   phone?: string | null;
   address?: string | null;
+  addressLatitude?: number | null;
+  addressLongitude?: number | null;
   role: Role;
   createdAt: string;
   updatedAt: string;
@@ -78,8 +80,10 @@ export type CartItem = {
   id: string;
   userId: string;
   productId: string;
+  vehicleId?: string | null;
   quantity: number;
   product: Product;
+  vehicle?: Vehicle | null;
 };
 
 export type OrderItem = {
@@ -90,6 +94,12 @@ export type OrderItem = {
   brand: string;
   unitPrice: number;
   quantity: number;
+  vehicleId?: string | null;
+  vehicleMake?: string | null;
+  vehicleModel?: string | null;
+  vehicleYear?: number | null;
+  vehicleRegistrationNumber?: string | null;
+  vehicle?: Vehicle | null;
 };
 
 export type Order = {
@@ -101,6 +111,8 @@ export type Order = {
   shippingName: string;
   shippingPhone?: string | null;
   shippingAddress: string;
+  shippingLatitude?: number | null;
+  shippingLongitude?: number | null;
   mapUrl?: string;
   paidAt?: string | null;
   releasedAt?: string | null;

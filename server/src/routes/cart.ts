@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { authenticate, getAuth } from "../lib/auth.js";
+import { authenticate, getAuth, requireCustomer } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { ApiError } from "../middleware/error.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -10,11 +10,13 @@ export const cartRoutes = Router();
 
 const cartSchema = z.object({
   productId: z.string().min(1),
-  quantity: z.coerce.number().int().min(1)
+  quantity: z.coerce.number().int().min(1),
+  vehicleId: z.string().optional().nullable()
 });
 
-const quantitySchema = z.object({
-  quantity: z.coerce.number().int().min(1)
+const cartUpdateSchema = z.object({
+  quantity: z.coerce.number().int().min(1).optional(),
+  vehicleId: z.string().optional().nullable()
 });
 
 const cartInclude = {
@@ -22,10 +24,11 @@ const cartInclude = {
     include: {
       category: true
     }
-  }
+  },
+  vehicle: true
 };
 
-cartRoutes.use(authenticate);
+cartRoutes.use(authenticate, requireCustomer);
 
 cartRoutes.get(
   "/",
@@ -61,6 +64,14 @@ cartRoutes.post(
     if (product.stockQuantity < desiredQuantity) {
       throw new ApiError(400, "Requested quantity is not available");
     }
+    if (payload.vehicleId) {
+      const vehicle = await prisma.vehicle.findFirst({
+        where: { id: payload.vehicleId, userId: auth.userId }
+      });
+      if (!vehicle) {
+        throw new ApiError(404, "Vehicle not found");
+      }
+    }
 
     const cartItem = await prisma.cartItem.upsert({
       where: {
@@ -70,12 +81,14 @@ cartRoutes.post(
         }
       },
       update: {
-        quantity: desiredQuantity
+        quantity: desiredQuantity,
+        vehicleId: payload.vehicleId ?? existing?.vehicleId ?? null
       },
       create: {
         userId: auth.userId,
         productId: payload.productId,
-        quantity: payload.quantity
+        quantity: payload.quantity,
+        vehicleId: payload.vehicleId ?? null
       },
       include: cartInclude
     });
@@ -88,7 +101,7 @@ cartRoutes.patch(
   "/:id",
   asyncHandler(async (req, res) => {
     const auth = getAuth(req);
-    const payload = quantitySchema.parse(req.body);
+    const payload = cartUpdateSchema.parse(req.body);
     const existing = await prisma.cartItem.findFirst({
       where: { id: req.params.id, userId: auth.userId },
       include: { product: true }
@@ -96,13 +109,25 @@ cartRoutes.patch(
     if (!existing) {
       throw new ApiError(404, "Cart item not found");
     }
-    if (existing.product.stockQuantity < payload.quantity) {
+    const nextQuantity = payload.quantity ?? existing.quantity;
+    if (existing.product.stockQuantity < nextQuantity) {
       throw new ApiError(400, "Requested quantity is not available");
+    }
+    if (payload.vehicleId) {
+      const vehicle = await prisma.vehicle.findFirst({
+        where: { id: payload.vehicleId, userId: auth.userId }
+      });
+      if (!vehicle) {
+        throw new ApiError(404, "Vehicle not found");
+      }
     }
 
     const cartItem = await prisma.cartItem.update({
       where: { id: req.params.id },
-      data: { quantity: payload.quantity },
+      data: {
+        quantity: nextQuantity,
+        ...(Object.prototype.hasOwnProperty.call(payload, "vehicleId") ? { vehicleId: payload.vehicleId ?? null } : {})
+      },
       include: cartInclude
     });
 

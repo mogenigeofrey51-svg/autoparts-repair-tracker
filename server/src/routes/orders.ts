@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { authenticate, getAuth } from "../lib/auth.js";
+import { authenticate, getAuth, requireCustomer } from "../lib/auth.js";
 import { prisma } from "../lib/prisma.js";
 import { ApiError } from "../middleware/error.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -11,14 +11,16 @@ export const orderRoutes = Router();
 const checkoutSchema = z.object({
   shippingName: z.string().min(2).optional(),
   shippingPhone: z.string().optional(),
-  shippingAddress: z.string().min(4).optional()
+  shippingAddress: z.string().min(4).optional(),
+  shippingLatitude: z.coerce.number().optional().nullable(),
+  shippingLongitude: z.coerce.number().optional().nullable()
 });
 
 const orderInclude = {
   items: true
 };
 
-orderRoutes.use(authenticate);
+orderRoutes.use(authenticate, requireCustomer);
 
 orderRoutes.get(
   "/",
@@ -60,7 +62,7 @@ orderRoutes.post(
 
     const cartItems = await prisma.cartItem.findMany({
       where: { userId: auth.userId },
-      include: { product: true }
+      include: { product: true, vehicle: true }
     });
     if (!cartItems.length) {
       throw new ApiError(400, "Your cart is empty");
@@ -92,13 +94,20 @@ orderRoutes.post(
           shippingName: payload.shippingName ?? user.name,
           shippingPhone: payload.shippingPhone ?? user.phone,
           shippingAddress: payload.shippingAddress ?? user.address ?? "Address not provided",
+          shippingLatitude: payload.shippingLatitude ?? null,
+          shippingLongitude: payload.shippingLongitude ?? null,
           items: {
             create: cartItems.map((item) => ({
               productId: item.productId,
+              vehicleId: item.vehicleId,
               productName: item.product.name,
               brand: item.product.brand,
               unitPrice: item.product.price,
-              quantity: item.quantity
+              quantity: item.quantity,
+              vehicleMake: item.vehicle?.make,
+              vehicleModel: item.vehicle?.model,
+              vehicleYear: item.vehicle?.year,
+              vehicleRegistrationNumber: item.vehicle?.registrationNumber
             }))
           }
         },
