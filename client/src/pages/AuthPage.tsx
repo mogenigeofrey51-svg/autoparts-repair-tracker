@@ -38,18 +38,21 @@ export function AuthPage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-100 px-4 py-8">
+    <main className="min-h-screen px-4 py-8">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="p-2 sm:p-4">
+        <section className="overflow-hidden rounded-lg bg-zinc-950 p-6 text-white shadow-soft sm:p-8">
           <div className="flex items-center gap-3">
-            <div className="rounded-md bg-emerald-700 p-3 text-white">
+            <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/15 p-3 text-emerald-300">
               <CarFront size={28} />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">AutoParts & Repair Tracker</p>
-              <h1 className="text-3xl font-bold tracking-normal">Parts, repairs, and vehicles together</h1>
+              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">AutoParts & Repair Tracker</p>
+              <h1 className="text-3xl font-bold tracking-normal text-white">Parts, repairs, and vehicles together</h1>
             </div>
           </div>
+          <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-300">
+            A practical workspace for owners who want their vehicle records, service history, and spare-parts orders in one place.
+          </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
@@ -57,15 +60,15 @@ export function AuthPage() {
               ["Repairs", "Track costs, parts used, garage names, and service dates."],
               ["Parts", "Search stock by make, model, year, category, and keyword."]
             ].map(([title, body]) => (
-              <div key={title} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-                <h2 className="font-semibold">{title}</h2>
-                <p className="mt-2 text-sm text-zinc-500">{body}</p>
+              <div key={title} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                <h2 className="font-semibold text-white">{title}</h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">{body}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-soft">
+        <section className="app-panel-strong p-6">
           <div className="grid grid-cols-2 rounded-md bg-zinc-100 p-1">
             <button
               className={`focus-ring rounded-md px-3 py-2 text-sm font-semibold ${
@@ -92,7 +95,7 @@ export function AuthPage() {
               <label className="block text-sm font-medium">
                 Name
                 <input
-                  className="focus-ring mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                  className="field-control"
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   required
@@ -103,7 +106,7 @@ export function AuthPage() {
             <label className="block text-sm font-medium">
               Email
               <input
-                className="focus-ring mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                className="field-control"
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
@@ -114,7 +117,7 @@ export function AuthPage() {
             <label className="block text-sm font-medium">
               Password
               <input
-                className="focus-ring mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                className="field-control"
                 type="password"
                 value={form.password}
                 onChange={(event) => setForm({ ...form, password: event.target.value })}
@@ -127,7 +130,7 @@ export function AuthPage() {
                 <label className="block text-sm font-medium">
                   Phone
                   <input
-                    className="focus-ring mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                    className="field-control"
                     value={form.phone}
                     onChange={(event) => setForm({ ...form, phone: event.target.value })}
                   />
@@ -135,7 +138,7 @@ export function AuthPage() {
                 <label className="block text-sm font-medium">
                   Address
                   <input
-                    className="focus-ring mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                    className="field-control"
                     value={form.address}
                     onChange={(event) => setForm({ ...form, address: event.target.value })}
                   />
@@ -146,7 +149,7 @@ export function AuthPage() {
             {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
             <button
-              className="focus-ring flex w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:bg-zinc-300"
+              className="primary-action w-full py-2.5"
               disabled={submitting}
               type="submit"
             >
@@ -155,7 +158,7 @@ export function AuthPage() {
             </button>
           </form>
 
-          <div className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             Admin seed login: <span className="font-semibold">admin@autoparts.test</span> /{" "}
             <span className="font-semibold">admin12345</span>
           </div>

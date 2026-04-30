@@ -53,10 +53,10 @@ export function DashboardPage() {
         description="A practical snapshot of garage activity, service costs, orders, and cart value."
         actions={
           <>
-            <Link className="focus-ring rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white" to="/vehicles">
+            <Link className="primary-action" to="/vehicles">
               Add vehicle
             </Link>
-            <Link className="focus-ring rounded-md border border-zinc-300 px-4 py-2 text-sm font-semibold" to="/catalog">
+            <Link className="secondary-action" to="/catalog">
               Find parts
             </Link>
           </>
@@ -76,7 +76,7 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="app-panel p-5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-bold">Recent repair timeline</h3>
             <Wrench size={20} className="text-emerald-700" />
@@ -86,7 +86,7 @@ export function DashboardPage() {
           ) : repairs.length ? (
             <div className="space-y-4">
               {repairs.slice(0, 5).map((repair: RepairRecord & { vehicleLabel: string }) => (
-                <div key={repair.id} className="border-l-2 border-emerald-700 pl-4">
+                <div key={repair.id} className="rounded-md border border-zinc-200 border-l-4 border-l-emerald-700 bg-zinc-50/70 p-4">
                   <p className="text-sm font-semibold">{repair.title}</p>
                   <p className="text-sm text-zinc-500">{repair.vehicleLabel}</p>
                   <p className="mt-1 text-sm text-zinc-600">
@@ -101,14 +101,14 @@ export function DashboardPage() {
           )}
         </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="app-panel p-5">
           <h3 className="text-lg font-bold">Latest orders</h3>
           <div className="mt-4 space-y-3">
             {orders.slice(0, 4).map((order) => (
               <Link
                 to="/orders"
                 key={order.id}
-                className="block rounded-md border border-zinc-200 p-3 hover:border-emerald-600"
+                className="block rounded-md border border-zinc-200 bg-zinc-50/70 p-3 transition hover:border-emerald-600 hover:bg-white"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p>

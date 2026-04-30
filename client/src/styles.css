@@ -11,7 +11,10 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: #f7f7f4;
+  background:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent 32%),
+    linear-gradient(315deg, rgba(245, 158, 11, 0.08), transparent 28%),
+    #f7f7f4;
   color: #18181b;
 }
 
@@ -24,4 +27,31 @@ select {
 
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-zinc-50;
+}
+
+::selection {
+  background: #047857;
+  color: #ffffff;
+}
+
+@layer components {
+  .app-panel {
+    @apply rounded-lg border border-zinc-200/80 bg-white/95 shadow-sm shadow-zinc-900/5;
+  }
+
+  .app-panel-strong {
+    @apply rounded-lg border border-zinc-200 bg-white shadow-soft;
+  }
+
+  .field-control {
+    @apply focus-ring mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-950 shadow-sm transition placeholder:text-zinc-400 hover:border-zinc-400;
+  }
+
+  .primary-action {
+    @apply focus-ring inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:shadow-none;
+  }
+
+  .secondary-action {
+    @apply focus-ring inline-flex items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-800 shadow-sm transition hover:border-zinc-400 hover:bg-zinc-50;
+  }
 }

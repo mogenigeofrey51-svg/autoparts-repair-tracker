@@ -4,12 +4,16 @@ import type { Product } from "../types";
 
 export function ProductCard({ product, onAdd }: { product: Product; onAdd: (productId: string) => Promise<void> }) {
   return (
-    <article className="flex h-full flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-      <div className="flex h-36 items-center justify-center rounded-md bg-zinc-100 text-zinc-400">
+    <article className="app-panel group flex h-full flex-col overflow-hidden p-4 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-soft">
+      <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-md border border-zinc-200 bg-zinc-100 text-zinc-400">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(4,120,87,0.10)_0,rgba(4,120,87,0.10)_1px,transparent_1px,transparent_14px)]" />
+        <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-bold text-emerald-700 shadow-sm">
+          {product.category?.name ?? "Part"}
+        </span>
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="h-full w-full rounded-md object-cover" />
+          <img src={product.imageUrl} alt={product.name} className="relative h-full w-full rounded-md object-cover transition group-hover:scale-105" />
         ) : (
-          <Package size={42} />
+          <Package size={46} className="relative" />
         )}
       </div>
       <div className="mt-4 flex flex-1 flex-col">
@@ -18,7 +22,7 @@ export function ProductCard({ product, onAdd }: { product: Product; onAdd: (prod
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{product.brand}</p>
             <h3 className="mt-1 text-base font-bold">{product.name}</h3>
           </div>
-          <p className="text-base font-bold text-zinc-950">${product.price.toFixed(2)}</p>
+          <p className="rounded-md bg-emerald-50 px-2 py-1 text-base font-bold text-emerald-800">${product.price.toFixed(2)}</p>
         </div>
         <p className="mt-2 line-clamp-2 text-sm text-zinc-500">{product.description}</p>
         <div className="mt-3 flex flex-wrap gap-1">
@@ -34,13 +38,13 @@ export function ProductCard({ product, onAdd }: { product: Product; onAdd: (prod
         <div className="mt-auto flex gap-2 pt-4">
           <Link
             to={`/products/${product.id}`}
-            className="focus-ring inline-flex flex-1 items-center justify-center gap-2 rounded-md border border-zinc-300 px-3 py-2 text-sm font-semibold hover:bg-zinc-50"
+            className="secondary-action flex-1 px-3"
           >
             <Search size={16} />
             Details
           </Link>
           <button
-            className="focus-ring inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+            className="primary-action flex-1 px-3"
             onClick={() => onAdd(product.id)}
             disabled={product.stockQuantity < 1}
             type="button"
