@@ -180,7 +180,8 @@ The recommended MVP deployment is a single Render web service plus a hosted Neon
 
    Render will detect `render.yaml` and create the web service with:
 
-   - Build command: `npm install && npm run db:generate && npm run db:deploy && npm run build`
+   - Build command: `npm install && npm run db:generate && npm run build`
+   - Pre-deploy command: `npm run db:deploy`
    - Start command: `npm run start -w server`
    - Runtime: Node
 
