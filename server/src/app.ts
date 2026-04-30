@@ -28,7 +28,7 @@ app.use(
 app.use(express.json({ limit: "5mb" }));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", app: "AutoParts & Repair Tracker" });
+  res.json({ status: "ok", app: "Ride254" });
 });
 
 app.use("/api/auth", authRoutes);

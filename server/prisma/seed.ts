@@ -255,7 +255,7 @@ async function main() {
     });
   }
 
-  console.log(`Seeded AutoParts & Repair Tracker with admin ${admin.email} and vehicle ${corolla.registrationNumber}.`);
+  console.log(`Seeded Ride254 with admin ${admin.email} and vehicle ${corolla.registrationNumber}.`);
 }
 
 main()

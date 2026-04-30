@@ -3,5 +3,5 @@ import { app } from "./app.js";
 const port = Number(process.env.PORT ?? 4000);
 
 app.listen(port, () => {
-  console.log(`AutoParts & Repair Tracker API running on http://localhost:${port}/api`);
+  console.log(`Ride254 API running on http://localhost:${port}/api`);
 });

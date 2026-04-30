@@ -55,8 +55,8 @@ export function Layout() {
               <CircleGauge size={24} />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">AutoParts</p>
-              <h1 className="text-xl font-bold text-white">Repair Tracker</h1>
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Parts & service</p>
+              <h1 className="text-xl font-bold text-white">Ride254</h1>
             </div>
           </div>
           <button

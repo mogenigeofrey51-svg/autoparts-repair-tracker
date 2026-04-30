@@ -46,7 +46,7 @@ export function AuthPage() {
               <CarFront size={28} />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">AutoParts & Repair Tracker</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Ride254</p>
               <h1 className="text-3xl font-bold tracking-normal text-white">Parts, repairs, and vehicles together</h1>
             </div>
           </div>

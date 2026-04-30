@@ -15,7 +15,7 @@ function LoadingScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100">
       <div className="rounded-lg border border-zinc-200 bg-white px-6 py-4 text-sm font-semibold shadow-sm">
-        Loading AutoParts & Repair Tracker
+        Loading Ride254
       </div>
     </div>
   );

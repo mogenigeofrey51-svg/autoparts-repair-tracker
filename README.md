@@ -1,4 +1,4 @@
-# AutoParts & Repair Tracker
+# Ride254
 
 A full-stack MVP for an e-commerce car parts platform with vehicle and repair tracking.
 
