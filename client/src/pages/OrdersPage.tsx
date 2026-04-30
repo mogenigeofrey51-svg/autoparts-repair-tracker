@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
@@ -38,7 +38,19 @@ export function OrdersPage() {
                   <h3 className="mt-1 text-xl font-bold">{currency.format(order.total)}</h3>
                   <p className="mt-1 text-sm text-zinc-500">{new Date(order.createdAt).toLocaleString()}</p>
                 </div>
-                <span className="w-fit rounded-md bg-amber-100 px-3 py-1 text-sm font-bold text-amber-900">{order.status}</span>
+                <div className="flex flex-wrap gap-2">
+                  <span className="w-fit rounded-md bg-amber-100 px-3 py-1 text-sm font-bold text-amber-900">{order.status}</span>
+                  <span className="w-fit rounded-md bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-800">{order.paymentStatus}</span>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-col gap-2 rounded-md bg-zinc-50 p-3 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+                <span>{order.shippingAddress}</span>
+                {order.mapUrl && (
+                  <a className="secondary-action w-fit px-3 py-1.5" href={order.mapUrl} target="_blank" rel="noreferrer">
+                    <MapPin size={15} />
+                    Map
+                  </a>
+                )}
               </div>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[520px] text-left text-sm">

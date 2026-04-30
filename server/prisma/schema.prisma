@@ -21,6 +21,12 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
 model User {
   id           String     @id @default(cuid())
   name         String
@@ -130,16 +136,20 @@ model Order {
   userId          String
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   status          OrderStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
   total           Decimal     @db.Decimal(10, 2)
   shippingName    String
   shippingPhone   String?
   shippingAddress String
+  paidAt          DateTime?
+  releasedAt      DateTime?
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   @@index([userId, createdAt])
   @@index([status])
+  @@index([paymentStatus])
 }
 
 model OrderItem {

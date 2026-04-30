@@ -1,9 +1,10 @@
-import { Save } from "lucide-react";
+import { MapPin, Save } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import type { User } from "../types";
+import { googleMapsSearchUrl } from "../utils/maps";
 
 export function ProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -13,6 +14,7 @@ export function ProfilePage() {
     address: user?.address ?? ""
   });
   const [notice, setNotice] = useState("");
+  const mapUrl = googleMapsSearchUrl(form.address);
 
   useEffect(() => {
     setForm({
@@ -64,6 +66,12 @@ export function ProfilePage() {
               onChange={(event) => setForm({ ...form, address: event.target.value })}
             />
           </label>
+          {mapUrl && (
+            <a className="secondary-action w-fit px-3 py-1.5" href={mapUrl} target="_blank" rel="noreferrer">
+              <MapPin size={15} />
+              Open address in Google Maps
+            </a>
+          )}
         </div>
         <div className="mt-5 flex items-center gap-3">
           <button className="focus-ring inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white" type="submit">

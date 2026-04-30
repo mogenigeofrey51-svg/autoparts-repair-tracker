@@ -1,11 +1,12 @@
-import { Edit, Plus, Save, Trash2 } from "lucide-react";
+import { ClipboardCheck, CreditCard, Edit, MapPin, PackageCheck, PackageOpen, Plus, Save, Trash2, Truck } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
-import type { Category, Order, OrderStatus, Product, RepairRecord, User, Vehicle } from "../types";
+import { StatCard } from "../components/StatCard";
+import type { Category, Order, OrderStatus, PaymentStatus, Product, RepairRecord, User, Vehicle } from "../types";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-const tabs = ["Products", "Categories", "Users", "Orders", "Vehicles", "Repairs"] as const;
+const tabs = ["Overview", "Orders", "Products", "Categories", "Users", "Vehicles", "Repairs"] as const;
 type Tab = (typeof tabs)[number];
 type AdminRepair = RepairRecord & { vehicle: Vehicle };
 
@@ -36,7 +37,7 @@ function listFromText(value: string) {
 }
 
 export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("Products");
+  const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -88,6 +89,28 @@ export function AdminPage() {
     }),
     [productForm]
   );
+
+  const orderMetrics = useMemo(() => {
+    const openOrders = orders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status));
+    const completedOrders = orders.filter((order) => order.status === "DELIVERED");
+    const paidOrders = orders.filter((order) => order.paymentStatus === "PAID");
+    const readyToRelease = orders.filter(
+      (order) => order.paymentStatus === "PAID" && !order.releasedAt && !["DELIVERED", "CANCELLED"].includes(order.status)
+    );
+    const pendingPayment = orders.filter((order) => order.paymentStatus === "UNPAID" && order.status !== "CANCELLED");
+    const paidRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0);
+    const completedRevenue = completedOrders.reduce((sum, order) => sum + order.total, 0);
+
+    return {
+      openOrders,
+      completedOrders,
+      paidOrders,
+      readyToRelease,
+      pendingPayment,
+      paidRevenue,
+      completedRevenue
+    };
+  }, [orders]);
 
   async function saveProduct(event: FormEvent) {
     event.preventDefault();
@@ -160,9 +183,24 @@ export function AdminPage() {
     await loadAdminData();
   }
 
+  async function updatePaymentStatus(orderId: string, paymentStatus: PaymentStatus) {
+    await api<Order>(`/admin/orders/${orderId}/payment`, { method: "PATCH", body: { paymentStatus } });
+    setNotice(paymentStatus === "PAID" ? "Order marked as paid." : "Payment status updated.");
+    await loadAdminData();
+  }
+
+  async function releaseOrder(orderId: string) {
+    await api<Order>(`/admin/orders/${orderId}/release`, { method: "POST" });
+    setNotice("Paid order released for fulfillment.");
+    await loadAdminData();
+  }
+
   return (
     <div>
-      <PageHeader title="Admin dashboard" description="Manage inventory, categories, users, orders, vehicles, and repair records." />
+      <PageHeader
+        title="Admin dashboard"
+        description="Business operations for paid orders, release workflow, fulfillment, inventory, customers, vehicles, and repair records."
+      />
 
       <div className="mb-6 flex gap-2 overflow-x-auto">
         {tabs.map((tab) => (
@@ -180,6 +218,82 @@ export function AdminPage() {
       </div>
 
       {notice && <p className="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">{notice}</p>}
+
+      {activeTab === "Overview" && (
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              label="Open orders"
+              value={String(orderMetrics.openOrders.length)}
+              detail="Pending, processing, or shipped"
+              icon={<PackageOpen size={20} />}
+            />
+            <StatCard
+              label="Ready to release"
+              value={String(orderMetrics.readyToRelease.length)}
+              detail="Paid orders waiting for release"
+              icon={<Truck size={20} />}
+            />
+            <StatCard
+              label="Completed orders"
+              value={String(orderMetrics.completedOrders.length)}
+              detail={currency.format(orderMetrics.completedRevenue)}
+              icon={<ClipboardCheck size={20} />}
+            />
+            <StatCard
+              label="Paid revenue"
+              value={currency.format(orderMetrics.paidRevenue)}
+              detail={`${orderMetrics.pendingPayment.length} unpaid order${orderMetrics.pendingPayment.length === 1 ? "" : "s"}`}
+              icon={<CreditCard size={20} />}
+            />
+          </div>
+
+          <section className="app-panel p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-bold">Paid orders awaiting release</h3>
+                <p className="mt-1 text-sm text-zinc-500">Release paid orders so the fulfillment team can process them.</p>
+              </div>
+              <button className="secondary-action" onClick={() => setActiveTab("Orders")} type="button">
+                View all orders
+              </button>
+            </div>
+            <div className="mt-5 space-y-3">
+              {orderMetrics.readyToRelease.length ? (
+                orderMetrics.readyToRelease.slice(0, 5).map((order) => (
+                  <div key={order.id} className="rounded-md border border-zinc-200 bg-zinc-50/70 p-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="font-bold">#{order.id.slice(-8).toUpperCase()} - {currency.format(order.total)}</p>
+                        <p className="mt-1 text-sm text-zinc-500">
+                          {order.user?.email} - {order.items.length} item{order.items.length === 1 ? "" : "s"}
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-600">{order.shippingAddress}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {order.mapUrl && (
+                          <a className="secondary-action px-3" href={order.mapUrl} target="_blank" rel="noreferrer">
+                            <MapPin size={15} />
+                            Map
+                          </a>
+                        )}
+                        <button className="primary-action px-3" onClick={() => void releaseOrder(order.id)} type="button">
+                          <PackageCheck size={15} />
+                          Release
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+                  No paid orders are waiting for release.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       {activeTab === "Products" && (
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -362,17 +476,29 @@ export function AdminPage() {
       )}
 
       {activeTab === "Orders" && (
-        <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-bold">Orders</h3>
+        <section className="app-panel p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold">Orders</h3>
+              <p className="mt-1 text-sm text-zinc-500">Confirm payments, release paid orders, update fulfillment, and open delivery locations.</p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-bold">
+              <span className="rounded-md bg-emerald-50 px-2 py-1 text-emerald-800">{orderMetrics.paidOrders.length} paid</span>
+              <span className="rounded-md bg-amber-100 px-2 py-1 text-amber-900">{orderMetrics.pendingPayment.length} unpaid</span>
+            </div>
+          </div>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[780px] text-left text-sm">
+            <table className="w-full min-w-[1080px] text-left text-sm">
               <thead className="text-xs uppercase text-zinc-500">
                 <tr>
                   <th className="py-2">Order</th>
                   <th>User</th>
                   <th>Total</th>
                   <th>Items</th>
+                  <th>Payment</th>
                   <th>Status</th>
+                  <th>Location</th>
+                  <th>Release</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -385,6 +511,17 @@ export function AdminPage() {
                     <td>
                       <select
                         className="focus-ring rounded-md border border-zinc-300 px-3 py-2"
+                        value={order.paymentStatus}
+                        onChange={(event) => void updatePaymentStatus(order.id, event.target.value as PaymentStatus)}
+                      >
+                        {["UNPAID", "PAID", "REFUNDED"].map((status) => (
+                          <option key={status}>{status}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        className="focus-ring rounded-md border border-zinc-300 px-3 py-2"
                         value={order.status}
                         onChange={(event) => void updateOrderStatus(order.id, event.target.value as OrderStatus)}
                       >
@@ -392,6 +529,31 @@ export function AdminPage() {
                           <option key={status}>{status}</option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      {order.mapUrl ? (
+                        <a className="secondary-action px-3 py-1.5" href={order.mapUrl} target="_blank" rel="noreferrer">
+                          <MapPin size={15} />
+                          Map
+                        </a>
+                      ) : (
+                        <span className="text-zinc-400">No address</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        className="primary-action px-3 py-1.5 disabled:bg-zinc-300"
+                        disabled={
+                          order.paymentStatus !== "PAID" ||
+                          Boolean(order.releasedAt) ||
+                          ["CANCELLED", "DELIVERED"].includes(order.status)
+                        }
+                        onClick={() => void releaseOrder(order.id)}
+                        type="button"
+                      >
+                        <PackageCheck size={15} />
+                        {order.releasedAt ? "Released" : "Release"}
+                      </button>
                     </td>
                   </tr>
                 ))}

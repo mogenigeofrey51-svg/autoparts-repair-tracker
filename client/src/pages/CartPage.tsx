@@ -1,10 +1,11 @@
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { MapPin, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { googleMapsSearchUrl } from "../utils/maps";
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -19,6 +20,7 @@ export function CartPage() {
   });
   const [error, setError] = useState("");
   const [placingOrder, setPlacingOrder] = useState(false);
+  const mapUrl = googleMapsSearchUrl(form.shippingAddress);
 
   async function submitCheckout(event: FormEvent) {
     event.preventDefault();
@@ -122,6 +124,12 @@ export function CartPage() {
                   required
                 />
               </label>
+              {mapUrl && (
+                <a className="secondary-action w-fit px-3 py-1.5" href={mapUrl} target="_blank" rel="noreferrer">
+                  <MapPin size={15} />
+                  Check on Google Maps
+                </a>
+              )}
             </div>
 
             <div className="mt-5 flex items-center justify-between border-t border-zinc-200 pt-4">

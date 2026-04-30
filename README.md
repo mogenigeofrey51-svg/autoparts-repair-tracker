@@ -80,6 +80,8 @@ A full-stack MVP for an e-commerce car parts platform with vehicle and repair tr
 - `GET /api/admin/users`
 - `GET /api/admin/orders`
 - `PATCH /api/admin/orders/:id/status`
+- `PATCH /api/admin/orders/:id/payment`
+- `POST /api/admin/orders/:id/release`
 - `GET /api/admin/vehicles`
 - `GET /api/admin/repairs`
 - `POST /api/admin/products`
@@ -110,6 +112,14 @@ The Prisma schema is in `server/prisma/schema.prisma` and includes:
 - `ProfilePage`: profile editing
 - `AdminPage`: product/category management and admin oversight
 - Shared components: `Layout`, `PageHeader`, `ProductCard`, `StatCard`, `EmptyState`
+
+## Admin Business Workflow
+
+- Admin overview shows open orders, paid revenue, completed orders, unpaid orders, and paid orders awaiting release.
+- Admins can mark orders as `UNPAID`, `PAID`, or `REFUNDED`.
+- Only paid orders can be released for fulfillment.
+- Releasing a pending paid order moves it to `PROCESSING` and stores a release timestamp.
+- Order shipping addresses include Google Maps links for delivery lookup without needing a Google Maps API key.
 
 ## Authentication Flow
 

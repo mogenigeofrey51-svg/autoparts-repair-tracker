@@ -1,4 +1,4 @@
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 import { Router } from "express";
 import { z } from "zod";
 import { authenticate, requireAdmin } from "../lib/auth.js";
@@ -29,6 +29,10 @@ const productSchema = z.object({
 
 const statusSchema = z.object({
   status: z.nativeEnum(OrderStatus)
+});
+
+const paymentStatusSchema = z.object({
+  paymentStatus: z.nativeEnum(PaymentStatus)
 });
 
 adminRoutes.use(authenticate, requireAdmin);
@@ -139,6 +143,57 @@ adminRoutes.patch(
     const order = await prisma.order.update({
       where: { id: req.params.id },
       data: { status: payload.status },
+      include: { items: true, user: true }
+    });
+    res.json(serializeOrder(order));
+  })
+);
+
+adminRoutes.patch(
+  "/orders/:id/payment",
+  asyncHandler(async (req, res) => {
+    const payload = paymentStatusSchema.parse(req.body);
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: {
+        paymentStatus: payload.paymentStatus,
+        paidAt: payload.paymentStatus === "PAID" ? new Date() : null
+      },
+      include: { items: true, user: true }
+    });
+    res.json(serializeOrder(order));
+  })
+);
+
+adminRoutes.post(
+  "/orders/:id/release",
+  asyncHandler(async (req, res) => {
+    const existing = await prisma.order.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!existing) {
+      res.status(404).json({ message: "Order not found" });
+      return;
+    }
+    if (existing.paymentStatus !== "PAID") {
+      res.status(400).json({ message: "Only paid orders can be released" });
+      return;
+    }
+    if (existing.status === "CANCELLED") {
+      res.status(400).json({ message: "Cancelled orders cannot be released" });
+      return;
+    }
+    if (existing.status === "DELIVERED") {
+      res.status(400).json({ message: "Completed orders cannot be released" });
+      return;
+    }
+
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: {
+        status: existing.status === "PENDING" ? "PROCESSING" : existing.status,
+        releasedAt: existing.releasedAt ?? new Date()
+      },
       include: { items: true, user: true }
     });
     res.json(serializeOrder(order));

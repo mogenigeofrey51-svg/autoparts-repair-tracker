@@ -214,6 +214,9 @@ async function main() {
       data: {
         userId: customer.id,
         status: "PROCESSING",
+        paymentStatus: "PAID",
+        paidAt: new Date("2026-04-01"),
+        releasedAt: new Date("2026-04-02"),
         total,
         shippingName: customer.name,
         shippingPhone: customer.phone,

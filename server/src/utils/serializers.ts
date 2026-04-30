@@ -49,6 +49,9 @@ export function serializeOrder(order: Entity) {
   return {
     ...order,
     total: money(order.total),
+    mapUrl: order.shippingAddress
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.shippingAddress)}`
+      : undefined,
     items: order.items?.map(serializeOrderItem),
     user: order.user ? publicUser(order.user) : undefined
   };

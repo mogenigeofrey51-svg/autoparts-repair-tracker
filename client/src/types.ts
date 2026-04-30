@@ -1,5 +1,6 @@
 export type Role = "USER" | "ADMIN";
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type PaymentStatus = "UNPAID" | "PAID" | "REFUNDED";
 
 export type User = {
   id: string;
@@ -95,10 +96,14 @@ export type Order = {
   id: string;
   userId: string;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   total: number;
   shippingName: string;
   shippingPhone?: string | null;
   shippingAddress: string;
+  mapUrl?: string;
+  paidAt?: string | null;
+  releasedAt?: string | null;
   items: OrderItem[];
   user?: User;
   createdAt: string;
